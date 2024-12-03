@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // For URL-encoded form data
 const db = mysql.createConnection({
     host: 'localhost',       // Replace with your MySQL host
     user: 'root',            // Replace with your MySQL user
-    password: 'Hab.jass52',    // Replace with your MySQL password
+    password: '',    // Replace with your MySQL password
     database: 'personal_Info_db',
     port: 3310
 });
