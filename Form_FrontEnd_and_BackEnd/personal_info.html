@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Information Management</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fbfd;
+            color: #333;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #4a90e2;
+        }
+
+        form,
+        .actions,
+        .results {
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 700px;
+            border: 1px solid #e3e6ed;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        form h2,
+        .actions h2,
+        .results h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #e3e6ed;
+            padding-bottom: 10px;
+        }
+
+        input, select, button {
+            margin: 10px 0;
+            padding: 10px 15px;
+            width: calc(100% - 30px);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        input:focus, select:focus {
+            border-color: #4a90e2;
+            outline: none;
+            box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+        }
+
+        button {
+            background-color: #4a90e2;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        .actions button {
+            width: calc(50% - 20px);
+            margin: 10px 10px;
+        }
+
+        .results {
+            overflow-y: auto;
+            max-height: 300px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        #resultOutput {
+            font-family: monospace;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Personal Information Management</h1>
+
+    <!-- Form for Adding Person -->
+    <form id="addPersonForm">
+        <h2>Add Person</h2>
+        <input type="text" id="fullName" placeholder="Full Name" required>
+        <input type="date" id="dateOfBirth" required>
+        <select id="gender" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="phone" placeholder="Phone" required>
+        <input type="text" id="highSchool" placeholder="High School" required>
+        <input type="number" id="graduationYear" placeholder="Graduation Year" required>
+        <input type="text" id="faculty" placeholder="Faculty" required>
+        <input type="text" id="program" placeholder="Program" required>
+        <button type="submit">Add Person</button>
+    </form>
+
+    <!-- Form for Updating Person -->
+    <form id="updatePersonForm" style="display:none;">
+        <h2>Update Person</h2>
+        <input type="hidden" id="personId" placeholder="Person ID">
+        <input type="text" id="updateFullName" placeholder="Full Name" required>
+        <input type="date" id="updateDateOfBirth" required>
+        <select id="updateGender" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+        <input type="email" id="updateEmail" placeholder="Email" required>
+        <input type="text" id="updatePhone" placeholder="Phone" required>
+        <input type="text" id="updateHighSchool" placeholder="High School" required>
+        <input type="number" id="updateGraduationYear" placeholder="Graduation Year" required>
+        <input type="text" id="updateFaculty" placeholder="Faculty" required>
+        <input type="text" id="updateProgram" placeholder="Program" required>
+        <button type="submit">Update Person</button>
+    </form>
+
+    <!-- Actions for Fetching Data -->
+    <div class="actions">
+        <h2>Fetch Data</h2>
+        <button id="getAll">Get All People</button>
+        <input type="number" id="fetchId" placeholder="Person ID (For Get By ID)">
+        <button id="getById">Get By ID</button>
+        <input type="number" id="updateId" placeholder="Person ID (For Update)">
+        <button id="getForUpdate">Fetch for Update</button>
+        <input type="number" id="deleteId" placeholder="Person ID (For Delete)">
+        <button id="deleteById">Delete By ID</button>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results">
+        <h2>Results</h2>
+        <pre id="resultOutput"></pre>
+    </div>
+
+    <script>
+        const apiBase = "http://localhost:3000"; // Backend Base URL
+        const resultOutput = document.getElementById("resultOutput");
+
+        // Add Person
+        document.getElementById("addPersonForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const data = {
+                full_name: document.getElementById("fullName").value,
+                date_of_birth: document.getElementById("dateOfBirth").value,
+                gender: document.getElementById("gender").value,
+                email: document.getElementById("email").value,
+                phone: document.getElementById("phone").value,
+                high_school: document.getElementById("highSchool").value,
+                graduation_year: document.getElementById("graduationYear").value,
+                faculty: document.getElementById("faculty").value,
+                program: document.getElementById("program").value,
+            };
+
+            try {
+                const response = await fetch(`${apiBase}/add-person`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                resultOutput.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                resultOutput.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Fetch person details to populate the update form
+        async function fetchPersonDetails(personId) {
+            try {
+                const response = await fetch(`${apiBase}/person/${personId}`);
+                const person = await response.json();
+                
+                // Populate the update form with the current person's details
+                document.getElementById("personId").value = person.id;
+                document.getElementById("updateFullName").value = person.full_name;
+                document.getElementById("updateDateOfBirth").value = person.date_of_birth;
+                document.getElementById("updateGender").value = person.gender;
+                document.getElementById("updateEmail").value = person.email;
+                document.getElementById("updatePhone").value = person.phone;
+                document.getElementById("updateHighSchool").value = person.high_school;
+                document.getElementById("updateGraduationYear").value = person.graduation_year;
+                document.getElementById("updateFaculty").value = person.faculty;
+                document.getElementById("updateProgram").value = person.program;
+
+                // Show the update form
+                document.getElementById("updatePersonForm").style.display = "block";
+            } catch (error) {
+                resultOutput.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Fetch person details for updating
+        document.getElementById("getForUpdate").addEventListener("click", async () => {
+            const id = document.getElementById("updateId").value.trim();
+            if (!id) {
+                resultOutput.textContent = "Please provide a valid Person ID.";
+                return;
+            }
+
+            fetchPersonDetails(id);
+        });
+
+        // Update Person
+        document.getElementById("updatePersonForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById("personId").value.trim();
+            const data = {
+                full_name: document.getElementById("updateFullName").value,
+                date_of_birth: document.getElementById("updateDateOfBirth").value,
+                gender: document.getElementById("updateGender").value,
+                email: document.getElementById("updateEmail").value,
+                phone: document.getElementById("updatePhone").value,
+                high_school: document.getElementById("updateHighSchool").value,
+                graduation_year: document.getElementById("updateGraduationYear").value,
+                faculty: document.getElementById("updateFaculty").value,
+                program: document.getElementById("updateProgram").value,
+            };
+
+            try {
+                const response = await fetch(`${apiBase}/person/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                resultOutput.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                resultOutput.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Fetch all people
+        document.getElementById("getAll").addEventListener("click", async () => {
+            try {
+                const response = await fetch(`${apiBase}/people`);
+                const result = await response.json();
+                resultOutput.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                resultOutput.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Get person by ID
+        document.getElementById("getById").addEventListener("click", async () => {
+            const id = document.getElementById("fetchId").value.trim();
+            if (!id) {
+                resultOutput.textContent = "Please provide a valid ID.";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/person/${id}`);
+                const result = await response.json();
+                resultOutput.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                resultOutput.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Delete person by ID
+        document.getElementById("deleteById").addEventListener("click", async () => {
+            const id = document.getElementById("deleteId").value.trim();
+            if (!id) {
+                resultOutput.textContent = "Please provide a valid ID.";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/person/${id}`, {
+                    method: "DELETE",
+                });
+
+                const result = await response.json();
+                resultOutput.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                resultOutput.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+
+</html>
